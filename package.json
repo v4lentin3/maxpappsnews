@@ -1,0 +1,16 @@
+{
+  "name": "md5-seguro",
+  "version": "1.0.0",
+  "description": "Sistema protegido para geração de hash MD5 com frontend",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "author": "Você",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
