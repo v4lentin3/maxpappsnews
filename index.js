@@ -8,14 +8,26 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Rota da API de hash
+// ✅ ROTA PROTEGIDA DE GERAÇÃO DE HASH
 app.get("/hash", (req, res) => {
+  const referer = req.get("referer");
+
+  // 🔒 BLOQUEIA se acesso direto
+  if (!referer) {
+    return res.status(403).json({
+      erro: "Acesso direto não permitido."
+    });
+  }
+
   const { id, func } = req.query;
 
   if (!id) {
-    return res.status(400).json({ erro: "Parâmetro 'id' é obrigatório" });
+    return res.status(400).json({
+      erro: "Acesso direto não permitido."
+    });
   }
 
+  // ✅ Geração do MD5
   let valorParaHash = func ? func + id : id;
 
   const md5 = crypto
@@ -24,11 +36,18 @@ app.get("/hash", (req, res) => {
     .digest("hex");
 
   res.json({
+    sucesso: true,
     id,
     func: func || null,
     usadoNoHash: valorParaHash,
-    md5
+    md5,
+    origem: referer
   });
+});
+
+// ✅ ROTA DE TESTE (opcional)
+app.get("/", (req, res) => {
+  res.send("✅ Servidor online e protegido!");
 });
 
 app.listen(PORT, () => {
