@@ -46,15 +46,6 @@
       margin-bottom: 25px;
     }
 
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 15px;
-      font-size: 16px;
-    }
-
     button {
       width: 100%;
       padding: 14px;
@@ -65,6 +56,7 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
+      font-size: 16px;
     }
 
     button:hover {
@@ -77,6 +69,7 @@
       padding: 15px;
       border-radius: 10px;
       word-break: break-all;
+      display: none;
     }
   </style>
 </head>
@@ -92,38 +85,47 @@
     </p>
 
     <div class="warning">
-      ⚠️ O sistema monitora tentativas de uso indevido em tempo real.
+      ⚠️ O sistema coleta os dados diretamente da URL.
+      O uso indevido resultará em bloqueio permanente.
     </div>
-
-    <input type="text" id="id" placeholder="Digite seu ID" required>
-    <input type="text" id="func" placeholder="Digite a Função (opcional)">
 
     <button onclick="gerarHash()">Gerar MD5</button>
 
-    <div class="resultado" id="resultado" style="display:none;"></div>
+    <div class="resultado" id="resultado"></div>
   </div>
 
   <script>
-    async function gerarHash() {
-      const id = document.getElementById("id").value.trim();
-      const func = document.getElementById("func").value.trim();
+    function gerarHash() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const func = params.get("func");
+
       const resultado = document.getElementById("resultado");
 
       if (!id) {
-        alert("Digite o ID!");
+        resultado.style.display = "block";
+        resultado.innerHTML = "❌ ERRO: Parâmetro <strong>id</strong> não encontrado na URL.";
         return;
       }
 
       let url = `/hash?id=${id}`;
-      if (func) url += `&func=${func}`;
+      if (func) {
+        url += `&func=${func}`;
+      }
 
-      const res = await fetch(url);
-      const data = await res.json();
-
-      resultado.style.display = "block";
-      resultado.innerHTML = `
-        <strong>MD5 Gerado:</strong><br>${data.md5}
-      `;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          resultado.style.display = "block";
+          resultado.innerHTML = `
+            <strong>MD5 Gerado:</strong><br>
+            ${data.md5}
+          `;
+        })
+        .catch(() => {
+          resultado.style.display = "block";
+          resultado.innerHTML = "❌ Erro ao gerar o MD5.";
+        });
     }
   </script>
 
