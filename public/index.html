@@ -70,6 +70,19 @@
       border-radius: 10px;
       word-break: break-all;
       display: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .resultado:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .copiado {
+      font-size: 14px;
+      color: #0f0;
+      margin-top: 8px;
+      display: none;
     }
   </style>
 </head>
@@ -89,9 +102,10 @@
       O uso indevido resultará em bloqueio permanente.
     </div>
 
-    <button onclick="gerarHash()">Gerar MD5</button>
+    <button onclick="gerarHash()">Gerar Código de acesso</button>
 
     <div class="resultado" id="resultado"></div>
+    <div class="copiado" id="copiado">✔️ Copiado para a área de transferência!</div>
   </div>
 
   <script>
@@ -101,6 +115,9 @@
       const func = params.get("func");
 
       const resultado = document.getElementById("resultado");
+      const copiado = document.getElementById("copiado");
+
+      copiado.style.display = "none"; // resetar mensagem
 
       if (!id) {
         resultado.style.display = "block";
@@ -109,22 +126,26 @@
       }
 
       let url = `/hash?id=${id}`;
-      if (func) {
-        url += `&func=${func}`;
-      }
+      if (func) url += `&func=${func}`;
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
           resultado.style.display = "block";
-          resultado.innerHTML = `
-            <strong>MD5 Gerado:</strong><br>
-            ${data.md5}
-          `;
+          resultado.innerHTML = data.md5;
+
+          // Copiar automaticamente ao clicar
+          resultado.onclick = () => {
+            navigator.clipboard.writeText(data.md5)
+              .then(() => {
+                copiado.style.display = "block";
+                setTimeout(() => copiado.style.display = "none", 2000);
+              });
+          };
         })
         .catch(() => {
           resultado.style.display = "block";
-          resultado.innerHTML = "❌ Erro ao gerar o MD5.";
+          resultado.innerHTML = "❌ Erro ao gerar o seu código.";
         });
     }
   </script>
