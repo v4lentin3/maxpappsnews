@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema Protegido</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      background: rgba(255,255,255,0.05);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #ff3b3b;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 15px;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+
+    .warning {
+      background: rgba(255,59,59,0.1);
+      border: 1px solid #ff3b3b;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 30px;
+      border: none;
+      background: linear-gradient(135deg, #ff3b3b, red);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .resultado {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.05);
+      padding: 15px;
+      border-radius: 10px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>🔒 ACESSO RESTRITO</h1>
+
+    <p>
+      Este código é <strong>pessoal e intransferível</strong>.
+      Qualquer uso por terceiros resultará em <strong>cancelamento automático</strong>.
+    </p>
+
+    <div class="warning">
+      ⚠️ O sistema monitora tentativas de uso indevido em tempo real.
+    </div>
+
+    <input type="text" id="id" placeholder="Digite seu ID" required>
+    <input type="text" id="func" placeholder="Digite a Função (opcional)">
+
+    <button onclick="gerarHash()">Gerar MD5</button>
+
+    <div class="resultado" id="resultado" style="display:none;"></div>
+  </div>
+
+  <script>
+    async function gerarHash() {
+      const id = document.getElementById("id").value.trim();
+      const func = document.getElementById("func").value.trim();
+      const resultado = document.getElementById("resultado");
+
+      if (!id) {
+        alert("Digite o ID!");
+        return;
+      }
+
+      let url = `/hash?id=${id}`;
+      if (func) url += `&func=${func}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      resultado.style.display = "block";
+      resultado.innerHTML = `
+        <strong>MD5 Gerado:</strong><br>${data.md5}
+      `;
+    }
+  </script>
+
+</body>
+</html>
