@@ -1,55 +1,63 @@
-const express = require("express");
-const crypto = require("crypto");
-const path = require("path");
+// ✅ Memória de controle por IP
+const acessos = new Map();
 
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
-// ✅ ROTA PROTEGIDA DE GERAÇÃO DE HASH
-app.get("/hash", (req, res) => {
+app.post("/hash", (req, res) => {
   const referer = req.get("referer");
+  const ip = req.ip;
 
-  // 🔒 BLOQUEIA se acesso direto
-  if (!referer) {
+  // 🔒 Permite apenas wolfpayment.com.br
+  const dominioPermitido = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
+
+  if (!referer || !dominioPermitido.test(referer)) {
     return res.status(403).json({
-      erro: "Acesso direto não permitido."
+      sucesso: false,
+      erro: "Acesso negado: você precisa vir do site oficial."
     });
   }
 
-  const { id, func } = req.query;
+  // 🔒 BLOQUEIA se já gerou nesta visita
+  if (acessos.has(ip)) {
+    return res.status(429).json({
+      sucesso: false,
+      erro: "Você já gerou um código. Volte ao site novamente para gerar outro."
+    });
+  }
 
-  if (!id) {
+  const { codigo } = req.body;
+
+  if (!codigo) {
     return res.status(400).json({
-      erro: "Acesso direto não permitido."
+      sucesso: false,
+      erro: "Código não informado."
     });
   }
 
-  // ✅ Geração do MD5
-  let valorParaHash = func ? func + id : id;
-
+  // ✅ Gera o MD5
   const md5 = crypto
     .createHash("md5")
-    .update(valorParaHash)
+    .update(codigo)
     .digest("hex");
+
+  // ✅ Marca que esse IP já usou
+  acessos.set(ip, true);
 
   res.json({
     sucesso: true,
-    id,
-    func: func || null,
-    usadoNoHash: valorParaHash,
-    md5,
-    origem: referer
+    md5
   });
 });
 
-// ✅ ROTA DE TESTE (opcional)
-app.get("/", (req, res) => {
-  res.send("✅ Servidor online e protegido!");
-});
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor rodando em: http://localhost:${PORT}`);
+// ✅ Libera novamente quando a pessoa voltar ao site
+app.get("/reset", (req, res) => {
+  const referer = req.get("referer");
+  const ip = req.ip;
+
+  const dominioPermitido = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
+
+  if (referer && dominioPermitido.test(referer)) {
+    acessos.delete(ip);
+  }
+
+  res.sendStatus(204);
 });
