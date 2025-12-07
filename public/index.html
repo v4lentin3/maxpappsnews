@@ -6,96 +6,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
+ body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
 
-    .container {
-      background: rgba(255,255,255,0.05);
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.6);
-      width: 100%;
-      max-width: 480px;
-      text-align: center;
-    }
+.container {
+  background: #1a1a1a;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  width: 100%;
+  max-width: 400px; /* ajusta largura */
+  text-align: center;
+}
 
-    h1 {
-      color: #ff3b3b;
-      margin-bottom: 20px;
-    }
+h1 {
+  color: #ff3b3b;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
 
-    p {
-      font-size: 15px;
-      color: #ddd;
-      margin-bottom: 20px;
-    }
+p {
+  font-size: 14px;
+  color: #ddd;
+  margin-bottom: 20px;
+}
 
-    .warning {
-      background: rgba(255,59,59,0.1);
-      border: 1px solid #ff3b3b;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 14px;
-      margin-bottom: 25px;
-    }
+.warning {
+  background: rgba(255,59,59,0.1);
+  border: 1px solid #ff3b3b;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
 
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 30px;
-      border: none;
-      margin-top: 10px;
-      margin-bottom: 15px;
-      text-align: center;
-      font-size: 16px;
-      outline: none;
-    }
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 30px;
+  border: none;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
 
-    button {
-      width: 100%;
-      padding: 14px;
-      border-radius: 30px;
-      border: none;
-      background: linear-gradient(135deg, #ff3b3b, red);
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      font-size: 16px;
-    }
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 30px;
+  border: none;
+  background: linear-gradient(135deg, #ff3b3b, red);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
 
-    button:hover {
-      opacity: 0.9;
-    }
+button:hover {
+  opacity: 0.9;
+}
 
-    .resultado {
-      margin-top: 20px;
-      background: rgba(255,255,255,0.05);
-      padding: 15px;
-      border-radius: 10px;
-      word-break: break-all;
-      display: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.resultado {
+  margin-top: 20px;
+  background: rgba(255,255,255,0.05);
+  padding: 12px;
+  border-radius: 10px;
+  word-break: break-all;
+  display: none;
+  cursor: pointer;
+}
 
-    .resultado:hover {
-      background: rgba(255,255,255,0.1);
-    }
+.copiado {
+  font-size: 14px;
+  color: #0f0;
+  margin-top: 8px;
+  display: none;
+}
 
-    .copiado {
-      font-size: 14px;
-      color: #0f0;
-      margin-top: 8px;
-      display: none;
-    }
   </style>
 </head>
 
