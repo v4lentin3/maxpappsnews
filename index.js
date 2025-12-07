@@ -1,45 +1,121 @@
-// ✅ Memória de controle por IP
-const acessos = new Map();
+const express = require("express");
+const crypto = require("crypto");
+const path = require("path");
 
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+// ================================
+// CONFIGURAÇÕES
+// ================================
+const DOMINIO_PERMITIDO = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
+const TEMPO_EXPIRACAO = 2 * 60 * 1000; // 2 minutos
+const MAX_TENTATIVAS = 3;
+
+// ================================
+// MEMÓRIA DE SEGURANÇA
+// ================================
+const sessoes = new Map();    // ip => { token, expira, usado }
+const tentativas = new Map(); // ip => tentativas
+
+// ================================
+// ✅ CRIA SESSÃO SOMENTE SE VEIO DO SITE
+// ================================
+app.get("/", (req, res, next) => {
+  const referer = req.get("referer");
+  const ip = req.ip;
+
+  // 🔒 BLOQUEIA se digitou direto na barra
+  if (!referer || !DOMINIO_PERMITIDO.test(referer)) {
+    return res.status(403).send("Acesso negado. Entre apenas pelo site oficial.");
+  }
+
+  // ✅ Cria nova sessão ao acessar pelo site
+  const token = crypto.randomBytes(32).toString("hex");
+
+  sessoes.set(ip, {
+    token,
+    expira: Date.now() + TEMPO_EXPIRACAO,
+    usado: false
+  });
+
+  tentativas.delete(ip);
+
+  next(); // continua para servir o HTML
+});
+
+// ================================
+// ✅ GERA MD5 COM SEGURANÇA TOTAL
+// ================================
 app.post("/hash", (req, res) => {
   const referer = req.get("referer");
   const ip = req.ip;
 
-  // 🔒 Permite apenas wolfpayment.com.br
-  const dominioPermitido = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
-
-  if (!referer || !dominioPermitido.test(referer)) {
+  // 🔒 Domínio obrigatório
+  if (!referer || !DOMINIO_PERMITIDO.test(referer)) {
     return res.status(403).json({
       sucesso: false,
-      erro: "Acesso negado: você precisa vir do site oficial."
+      erro: "Acesso negado."
     });
   }
 
-  // 🔒 BLOQUEIA se já gerou nesta visita
-  if (acessos.has(ip)) {
+  // 🔒 Sessão obrigatória
+  const sessao = sessoes.get(ip);
+  if (!sessao) {
+    return res.status(401).json({
+      sucesso: false,
+      erro: "Sessão inválida. Volte ao site."
+    });
+  }
+
+  // 🔒 Expiração
+  if (Date.now() > sessao.expira) {
+    sessoes.delete(ip);
+    return res.status(401).json({
+      sucesso: false,
+      erro: "Sessão expirada."
+    });
+  }
+
+  // 🔒 Só pode gerar 1 vez
+  if (sessao.usado) {
     return res.status(429).json({
       sucesso: false,
-      erro: "Você já gerou um código. Compre um novo acesso."
+      erro: "Você já gerou um código nesta visita."
     });
   }
 
-  const { codigo } = req.body;
-
-  if (!codigo) {
-    return res.status(400).json({
+  // 🔒 Anti-força-bruta
+  const tent = tentativas.get(ip) || 0;
+  if (tent >= MAX_TENTATIVAS) {
+    return res.status(429).json({
       sucesso: false,
-      erro: "Código não informado."
+      erro: "Muitas tentativas."
     });
   }
 
-  // ✅ Gera o MD5
+  const { codigo, token } = req.body;
+
+  if (!codigo || !token || token !== sessao.token) {
+    tentativas.set(ip, tent + 1);
+    return res.status(403).json({
+      sucesso: false,
+      erro: "Token inválido."
+    });
+  }
+
+  // ✅ GERA MD5
   const md5 = crypto
     .createHash("md5")
     .update(codigo)
     .digest("hex");
 
-  // ✅ Marca que esse IP já usou
-  acessos.set(ip, true);
+  // 🔒 Marca sessão como usada
+  sessao.usado = true;
+  sessoes.set(ip, sessao);
 
   res.json({
     sucesso: true,
@@ -47,17 +123,7 @@ app.post("/hash", (req, res) => {
   });
 });
 
-
-// ✅ Libera novamente quando a pessoa voltar ao site
-app.get("/reset", (req, res) => {
-  const referer = req.get("referer");
-  const ip = req.ip;
-
-  const dominioPermitido = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
-
-  if (referer && dominioPermitido.test(referer)) {
-    acessos.delete(ip);
-  }
-
-  res.sendStatus(204);
+// ================================
+app.listen(PORT, () => {
+  console.log(`✅ Servidor seguro rodando em: http://localhost:${PORT}`);
 });
