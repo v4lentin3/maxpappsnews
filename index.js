@@ -19,7 +19,7 @@ app.post("/hash", (req, res) => {
   if (acessos.has(ip)) {
     return res.status(429).json({
       sucesso: false,
-      erro: "Você já gerou um código. Volte ao site novamente para gerar outro."
+      erro: "Você já gerou um código. Compre um novo acesso."
     });
   }
 
