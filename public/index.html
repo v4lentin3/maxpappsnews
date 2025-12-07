@@ -70,10 +70,6 @@
       font-size: 16px;
     }
 
-    button:hover {
-      opacity: 0.9;
-    }
-
     .resultado {
       margin-top: 20px;
       background: rgba(255,255,255,0.05);
@@ -82,11 +78,6 @@
       word-break: break-all;
       display: none;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .resultado:hover {
-      background: rgba(255,255,255,0.1);
     }
 
     .copiado {
@@ -101,23 +92,14 @@
 <body>
 
   <div class="container">
-    <h1>🔒 ACESSO RESTRITO</h1>
-
-    <p>
-      Este código é <strong>pessoal e intransferível</strong>.
-      Qualquer uso por terceiros resultará em <strong>cancelamento automático</strong>.
-    </p>
-
-    <div class="warning">
-      ⚠️ O sistema só funciona dentro do domínio autorizado.
-    </div>
+    <h1>🔒 SISTEMA DE HASH</h1>
 
     <input type="text" id="codigo" placeholder="Digite seu código secreto">
 
     <button onclick="gerarHash()">Gerar Código de Acesso</button>
 
     <div class="resultado" id="resultado"></div>
-    <div class="copiado" id="copiado">✔️ Copiado para a área de transferência!</div>
+    <div class="copiado" id="copiado">✔️ Copiado com sucesso! Redirecionando...</div>
   </div>
 
   <script>
@@ -154,10 +136,15 @@
         resultado.style.display = "block";
         resultado.innerHTML = data.md5;
 
+        // ✅ AO CLICAR, COPIA E REDIRECIONA
         resultado.onclick = () => {
           navigator.clipboard.writeText(data.md5).then(() => {
             copiado.style.display = "block";
-            setTimeout(() => copiado.style.display = "none", 2000);
+
+            // ⏳ Aguarda 1 segundo e redireciona
+            setTimeout(() => {
+              window.location.href = "https://SEUSITEAQUI.com";
+            }, 1000);
           });
         };
       })
