@@ -11,63 +11,43 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================================
 // CONFIGURAÇÕES
 // ================================
-const DOMINIO_PERMITIDO = /^https?:\/\/([a-z0-9-]+\.)*wolfpayment\.com\.br/i;
 const TEMPO_EXPIRACAO = 2 * 60 * 1000; // 2 minutos
 const MAX_TENTATIVAS = 3;
 
 // ================================
 // MEMÓRIA DE SEGURANÇA
 // ================================
-const sessoes = new Map();    // ip => { token, expira, usado }
+const sessoes = new Map();     // ip => { expira, usado }
 const tentativas = new Map(); // ip => tentativas
 
 // ================================
-// ✅ CRIA SESSÃO SOMENTE SE VEIO DO SITE
+// ✅ CRIA SESSÃO PARA QUALQUER USUÁRIO
 // ================================
 app.get("/", (req, res, next) => {
-  const referer = req.get("referer");
   const ip = req.ip;
 
-  // 🔒 BLOQUEIA se digitou direto na barra
-  if (!referer || !DOMINIO_PERMITIDO.test(referer)) {
-    return res.status(403).send("Acesso negado. Entre apenas pelo site oficial.");
-  }
-
-  // ✅ Cria nova sessão ao acessar pelo site
-  const token = crypto.randomBytes(32).toString("hex");
-
   sessoes.set(ip, {
-    token,
     expira: Date.now() + TEMPO_EXPIRACAO,
     usado: false
   });
 
   tentativas.delete(ip);
 
-  next(); // continua para servir o HTML
+  next();
 });
 
 // ================================
-// ✅ GERA MD5 COM SEGURANÇA TOTAL
+// ✅ GERA MD5 COM SEGURANÇA
 // ================================
 app.post("/hash", (req, res) => {
-  const referer = req.get("referer");
   const ip = req.ip;
-
-  // 🔒 Domínio obrigatório
-  if (!referer || !DOMINIO_PERMITIDO.test(referer)) {
-    return res.status(403).json({
-      sucesso: false,
-      erro: "Acesso negado."
-    });
-  }
 
   // 🔒 Sessão obrigatória
   const sessao = sessoes.get(ip);
   if (!sessao) {
     return res.status(401).json({
       sucesso: false,
-      erro: "Sessão inválida. Volte ao site."
+      erro: "Sessão inválida. Atualize a página."
     });
   }
 
@@ -97,13 +77,13 @@ app.post("/hash", (req, res) => {
     });
   }
 
-  const { codigo, token } = req.body;
+  const { codigo } = req.body;
 
-  if (!codigo || !token || token !== sessao.token) {
+  if (!codigo) {
     tentativas.set(ip, tent + 1);
     return res.status(403).json({
       sucesso: false,
-      erro: "Token inválido."
+      erro: "Código inválido."
     });
   }
 
@@ -125,5 +105,5 @@ app.post("/hash", (req, res) => {
 
 // ================================
 app.listen(PORT, () => {
-  console.log(`✅ Servidor seguro rodando em: http://localhost:${PORT}`);
+  console.log(`✅ Servidor rodando em: http://localhost:${PORT}`);
 });
