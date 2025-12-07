@@ -46,6 +46,17 @@
       margin-bottom: 25px;
     }
 
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 30px;
+      border: none;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 16px;
+      outline: none;
+    }
+
     button {
       width: 100%;
       padding: 14px;
@@ -98,11 +109,12 @@
     </p>
 
     <div class="warning">
-      ⚠️ O sistema coleta os dados diretamente da URL.
-      O uso indevido resultará em bloqueio permanente.
+      ⚠️ O sistema só funciona dentro do domínio autorizado.
     </div>
 
-    <button onclick="gerarHash()">Gerar Código de acesso</button>
+    <input type="text" id="codigo" placeholder="Digite seu código secreto">
+
+    <button onclick="gerarHash()">Gerar Código de Acesso</button>
 
     <div class="resultado" id="resultado"></div>
     <div class="copiado" id="copiado">✔️ Copiado para a área de transferência!</div>
@@ -110,43 +122,49 @@
 
   <script>
     function gerarHash() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      const func = params.get("func");
-
+      const codigo = document.getElementById("codigo").value.trim();
       const resultado = document.getElementById("resultado");
       const copiado = document.getElementById("copiado");
 
-      copiado.style.display = "none"; // resetar mensagem
+      copiado.style.display = "none";
+      resultado.style.display = "none";
 
-      if (!id) {
+      if (!codigo) {
         resultado.style.display = "block";
-        resultado.innerHTML = "❌ ERRO: Você não pode gerar códigos.";
+        resultado.innerHTML = "❌ Digite um código válido.";
         return;
       }
 
-      let url = `/hash?id=${id}`;
-      if (func) url += `&func=${func}`;
+      fetch("/hash", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ codigo })
+      })
+      .then(async res => {
+        const data = await res.json();
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
+        if (!res.ok || !data.sucesso) {
           resultado.style.display = "block";
-          resultado.innerHTML = data.md5;
+          resultado.innerHTML = "❌ " + (data.erro || "Erro ao gerar.");
+          return;
+        }
 
-          // Copiar automaticamente ao clicar
-          resultado.onclick = () => {
-            navigator.clipboard.writeText(data.md5)
-              .then(() => {
-                copiado.style.display = "block";
-                setTimeout(() => copiado.style.display = "none", 2000);
-              });
-          };
-        })
-        .catch(() => {
-          resultado.style.display = "block";
-          resultado.innerHTML = "❌ Erro ao gerar o seu código.";
-        });
+        resultado.style.display = "block";
+        resultado.innerHTML = data.md5;
+
+        resultado.onclick = () => {
+          navigator.clipboard.writeText(data.md5).then(() => {
+            copiado.style.display = "block";
+            setTimeout(() => copiado.style.display = "none", 2000);
+          });
+        };
+      })
+      .catch(() => {
+        resultado.style.display = "block";
+        resultado.innerHTML = "❌ Erro de conexão com o servidor.";
+      });
     }
   </script>
 
